@@ -1,11 +1,6 @@
 const mongoose = require('mongoose');
 
-const VehicleSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-  },
+const vehicleSchema = new mongoose.Schema({
   make: {
     type: String,
     required: true,
@@ -21,12 +16,8 @@ const VehicleSchema = new mongoose.Schema({
   vin: {
     type: String,
     required: true,
-    unique: true,
-  },
-  date: {
-    type: Date,
-    default: Date.now,
   },
 });
 
-module.exports = mongoose.model('Vehicle', VehicleSchema);
+const Vehicle = mongoose.model('Vehicle', vehicleSchema);
+module.exports = Vehicle;

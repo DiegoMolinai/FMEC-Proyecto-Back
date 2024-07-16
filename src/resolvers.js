@@ -1,109 +1,169 @@
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const User = require('./models/User');
-const Vehicle = require('./models/Vehicle');
-const Service = require('./models/Service');
+const userController = require('./controllers/userController');
+const vehicleController = require('./controllers/vehicleController');
+const serviceController = require('./controllers/serviceController');
+const productController = require('./controllers/productController');
+const clientController = require('./controllers/clientController');
+const { AppError } = require('./utils/errorHandler');
 
 const resolvers = {
   Query: {
-    users: async () => {
-      return await User.find();
+    users: async (_, __, { user }) => {
+      if (!user) {
+        throw new AppError('No estás autenticado', 401);
+      }
+      return await userController.getAllUsers();
     },
-    user: async (_, { id }) => {
-      return await User.findById(id);
+    user: async (_, { id }, { user }) => {
+      if (!user) {
+        throw new AppError('No estás autenticado', 401);
+      }
+      return await userController.getUserById(id);
     },
-    vehicles: async (_, { userId }) => {
-      return await Vehicle.find({ user: userId });
+    vehicles: async (_, __, { user }) => {
+      if (!user) {
+        throw new AppError('No estás autenticado', 401);
+      }
+      return await vehicleController.getAllVehicles();
     },
-    vehicle: async (_, { id }) => {
-      return await Vehicle.findById(id);
+    vehicle: async (_, { id }, { user }) => {
+      if (!user) {
+        throw new AppError('No estás autenticado', 401);
+      }
+      return await vehicleController.getVehicleById(id);
     },
-    services: async (_, { vehicleId }) => {
-      return await Service.find({ vehicle: vehicleId });
+    services: async (_, __, { user }) => {
+      if (!user) {
+        throw new AppError('No estás autenticado', 401);
+      }
+      return await serviceController.getAllServices();
     },
-    service: async (_, { id }) => {
-      return await Service.findById(id);
+    service: async (_, { id }, { user }) => {
+      if (!user) {
+        throw new AppError('No estás autenticado', 401);
+      }
+      return await serviceController.getServiceById(id);
+    },
+    products: async (_, __, { user }) => {
+      if (!user) {
+        throw new AppError('No estás autenticado', 401);
+      }
+      return await productController.getAllProducts();
+    },
+    product: async (_, { id }, { user }) => {
+      if (!user) {
+        throw new AppError('No estás autenticado', 401);
+      }
+      return await productController.getProductById(id);
+    },
+    clients: async (_, __, { user }) => {
+      if (!user) {
+        throw new AppError('No estás autenticado', 401);
+      }
+      return await clientController.getAllClients();
+    },
+    client: async (_, { id }, { user }) => {
+      if (!user) {
+        throw new AppError('No estás autenticado', 401);
+      }
+      return await clientController.getClientById(id);
     },
   },
   Mutation: {
     register: async (_, { name, email, password }) => {
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        throw new Error('User already exists');
-      }
-
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-
-      const user = new User({
-        name,
-        email,
-        password: hashedPassword,
-      });
-
-      await user.save();
-      return user;
+      return await userController.register({ name, email, password });
     },
     login: async (_, { email, password }) => {
-      const user = await User.findOne({ email });
+      return await userController.login({ email, password });
+    },
+    addVehicle: async (_, { make, model, year, vin }, { user }) => {
       if (!user) {
-        throw new Error('Invalid credentials');
+        throw new AppError('No estás autenticado', 401);
       }
-
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-        throw new Error('Invalid credentials');
+      return await vehicleController.addVehicle({ make, model, year, vin });
+    },
+    updateVehicle: async (_, { id, make, model, year, vin }, { user }) => {
+      if (!user) {
+        throw new AppError('No estás autenticado', 401);
       }
-
-      const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-      return token;
+      return await vehicleController.updateVehicle({ id, make, model, year, vin });
     },
-    addVehicle: async (_, { userId, make, model, year, vin }) => {
-      const vehicle = new Vehicle({
-        user: userId,
-        make,
-        model,
-        year,
-        vin,
-      });
-
-      await vehicle.save();
-      return vehicle;
+    deleteVehicle: async (_, { id }, { user }) => {
+      if (!user) {
+        throw new AppError('No estás autenticado', 401);
+      }
+      return await vehicleController.deleteVehicle(id);
     },
-    updateVehicle: async (_, { id, make, model, year, vin }) => {
-      const vehicle = await Vehicle.findByIdAndUpdate(
-        id,
-        { make, model, year, vin },
-        { new: true }
-      );
-      return vehicle;
+    addService: async (_, { name, description, cost }, { user }) => {
+      if (!user) {
+        throw new AppError('No estás autenticado', 401);
+      }
+      return await serviceController.addService({ name, description, cost });
     },
-    deleteVehicle: async (_, { id }) => {
-      await Vehicle.findByIdAndDelete(id);
-      return 'Vehicle deleted';
+    updateService: async (_, { id, name, description, cost }, { user }) => {
+      if (!user) {
+        throw new AppError('No estás autenticado', 401);
+      }
+      return await serviceController.updateService({ id, name, description, cost });
     },
-    addService: async (_, { vehicleId, description, date, cost }) => {
-      const service = new Service({
-        vehicle: vehicleId,
-        description,
-        date,
-        cost,
-      });
-
-      await service.save();
-      return service;
+    deleteService: async (_, { id }, { user }) => {
+      if (!user) {
+        throw new AppError('No estás autenticado', 401);
+      }
+      return await serviceController.deleteService(id);
     },
-    updateService: async (_, { id, description, date, cost }) => {
-      const service = await Service.findByIdAndUpdate(
-        id,
-        { description, date, cost },
-        { new: true }
-      );
-      return service;
+    sellService: async (_, { serviceId, vehicleId, productsUsed }, { user }) => {
+      if (!user) {
+        throw new AppError('No estás autenticado', 401);
+      }
+      return await serviceController.sellService({ serviceId, vehicleId, productsUsed });
     },
-    deleteService: async (_, { id }) => {
-      await Service.findByIdAndDelete(id);
-      return 'Service deleted';
+    addProduct: async (_, { name, description, price, quantity }, { user }) => {
+      if (!user) {
+        throw new AppError('No estás autenticado', 401);
+      }
+      return await productController.addProduct({ name, description, price, quantity });
+    },
+    updateProduct: async (_, { id, name, description, price, quantity }, { user }) => {
+      if (!user) {
+        throw new AppError('No estás autenticado', 401);
+      }
+      return await productController.updateProduct({ id, name, description, price, quantity });
+    },
+    deleteProduct: async (_, { id }, { user }) => {
+      if (!user) {
+        throw new AppError('No estás autenticado', 401);
+      }
+      return await productController.deleteProduct(id);
+    },
+    sellProduct: async (_, { productId, quantity }, { user }) => {
+      if (!user) {
+        throw new AppError('No estás autenticado', 401);
+      }
+      return await productController.sellProduct({ productId, quantity });
+    },
+    addClient: async (_, clientData, { user }) => {
+      if (!user) {
+        throw new AppError('No estás autenticado', 401);
+      }
+      return await clientController.addClient(clientData);
+    },
+    updateClient: async (_, { id, ...clientData }, { user }) => {
+      if (!user) {
+        throw new AppError('No estás autenticado', 401);
+      }
+      return await clientController.updateClient(id, clientData);
+    },
+    deleteClient: async (_, { id }, { user }) => {
+      if (!user) {
+        throw new AppError('No estás autenticado', 401);
+      }
+      return await clientController.deleteClient(id);
+    },
+    addServiceHistory: async (_, { clientId, serviceData }, { user }) => {
+      if (!user) {
+        throw new AppError('No estás autenticado', 401);
+      }
+      return await clientController.addServiceHistory(clientId, serviceData);
     },
   },
 };

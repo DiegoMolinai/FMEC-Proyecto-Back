@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { check, validationResult } = require('express-validator');
 const User = require('../models/User');
+require('dotenv').config();
 
 // Registro de usuario
 router.post(
@@ -48,7 +49,7 @@ router.post(
       jwt.sign(
         payload,
         process.env.JWT_SECRET, // Usar el secreto de JWT desde .env
-        { expiresIn: 360000 },
+        { expiresIn: '24h' }, // Ajustar el tiempo de expiración si es necesario
         (err, token) => {
           if (err) throw err;
           res.json({ token });
@@ -98,7 +99,7 @@ router.post(
       jwt.sign(
         payload,
         process.env.JWT_SECRET, // Usar el secreto de JWT desde .env
-        { expiresIn: 360000 },
+        { expiresIn: '24h' }, // Ajustar el tiempo de expiración si es necesario
         (err, token) => {
           if (err) throw err;
           res.json({ token });
