@@ -1,13 +1,13 @@
-const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 const { AppError } = require('../utils/errorHandler');
 
 exports.register = async ({ name, email, password }) => {
   let user = await User.findOne({ email });
 
   if (user) {
-    throw new AppError('El usuario ya existe', 400);
+    throw new AppError('User already exists', 400);
   }
 
   user = new User({
@@ -28,30 +28,14 @@ exports.login = async ({ email, password }) => {
   const user = await User.findOne({ email });
 
   if (!user) {
-    throw new AppError('Credenciales inválidas', 400);
+    throw new AppError('Invalid credentials', 400);
   }
 
   const isMatch = await bcrypt.compare(password, user.password);
 
   if (!isMatch) {
-    throw new AppError('Credenciales inválidas', 400);
+    throw new AppError('Invalid credentials', 400);
   }
 
-  const payload = {
-    user: {
-      id: user.id,
-    },
-  };
-
-  return jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: '1h',
-  });
-};
-
-exports.getAllUsers = async () => {
-  return await User.find();
-};
-
-exports.getUserById = async (id) => {
-  return await User.findById(id);
+  return user;
 };

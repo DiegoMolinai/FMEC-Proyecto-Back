@@ -88,6 +88,11 @@ const typeDefs = gql`
     date: String!
   }
 
+    type AuthPayload {
+    token: String!
+    user: User!
+  }
+
   type Query {
     users: [User!]!
     user(id: ID!): User
@@ -103,7 +108,7 @@ const typeDefs = gql`
 
   type Mutation {
     register(name: String!, email: String!, password: String!): User
-    login(email: String!, password: String!): String
+    login(email: String!, password: String!): AuthPayload
     addVehicle(make: String!, model: String!, year: Int!, vin: String!): Vehicle
     updateVehicle(id: ID!, make: String, model: String, year: Int, vin: String): Vehicle
     deleteVehicle(id: ID!): String

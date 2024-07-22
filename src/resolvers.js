@@ -1,3 +1,4 @@
+const jwt = require('jsonwebtoken');
 const userController = require('./controllers/userController');
 const vehicleController = require('./controllers/vehicleController');
 const serviceController = require('./controllers/serviceController');
@@ -73,7 +74,9 @@ const resolvers = {
       return await userController.register({ name, email, password });
     },
     login: async (_, { email, password }) => {
-      return await userController.login({ email, password });
+      const user = await userController.login({ email, password });
+      const token = jwt.sign({ user: { id: user.id } }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      return { token, user };
     },
     addVehicle: async (_, { make, model, year, vin }, { user }) => {
       if (!user) {
